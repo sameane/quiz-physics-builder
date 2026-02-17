@@ -514,6 +514,10 @@ const App: React.FC = () => {
     const closingPhrase = element.querySelector('.closing-phrase') as HTMLElement;
     let explicitHeight = '';
 
+    // Store original math styles and apply fix
+    const mjxContainers = element.querySelectorAll('mjx-container[jax="SVG"]');
+    const originalMathStyles: Map<HTMLElement, { marginTop: string; position: string; top: string; verticalAlign: string }> = new Map();
+
     try {
       if (includeAnswers) {
         if (akSection) akSection.style.display = 'block';
@@ -561,7 +565,23 @@ const App: React.FC = () => {
 
       await new Promise(r => setTimeout(r, 100));
 
+      // Apply math fix before capture
+      mjxContainers.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        originalMathStyles.set(htmlEl, {
+          marginTop: htmlEl.style.marginTop,
+          position: htmlEl.style.position,
+          top: htmlEl.style.top,
+          verticalAlign: htmlEl.style.verticalAlign
+        });
+        htmlEl.style.verticalAlign = 'middle';
+        htmlEl.style.marginTop = '5px';
+        htmlEl.style.position = 'relative';
+        htmlEl.style.top = '5px';
+      });
+
       if (format === 'pdf') {
+
         showToast("جاري توليد ملف PDF...", "info");
         const canvas = await html2canvas(element, {
           scale: 3, 
@@ -571,7 +591,20 @@ const App: React.FC = () => {
           imageTimeout: 0,
           windowWidth: 1000,
           height: explicitHeight ? parseInt(explicitHeight) : undefined,
-          windowHeight: explicitHeight ? parseInt(explicitHeight) : undefined
+          windowHeight: explicitHeight ? parseInt(explicitHeight) : undefined,
+          foreignObjectRendering: false,
+          onclone: (clonedDoc) => {
+            // Fix math alignment in cloned document - move down by 5px
+            const mjxContainers = clonedDoc.querySelectorAll('mjx-container[jax="SVG"]');
+            mjxContainers.forEach((el) => {
+              const htmlEl = el as HTMLElement;
+              htmlEl.style.verticalAlign = 'middle';
+              htmlEl.style.display = 'inline-block';
+              htmlEl.style.marginTop = '5px';
+              htmlEl.style.position = 'relative';
+              htmlEl.style.top = '5px';
+            });
+          }
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -690,6 +723,13 @@ const App: React.FC = () => {
       questions.forEach(q => {
           const original = originalMargins.get(q);
           q.style.marginTop = original || '';
+      });
+      // Restore original math styles
+      originalMathStyles.forEach((styles, el) => {
+        el.style.marginTop = styles.marginTop;
+        el.style.position = styles.position;
+        el.style.top = styles.top;
+        el.style.verticalAlign = styles.verticalAlign;
       });
       setLoading(false);
     }

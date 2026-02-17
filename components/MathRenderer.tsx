@@ -32,7 +32,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content, className = '', in
   return (
     <Tag 
       ref={containerRef as any} 
-      className={className} 
+      className={className}
     />
   );
 };

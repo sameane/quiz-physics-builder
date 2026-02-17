@@ -82,24 +82,32 @@
         opacity: 0.8;
       }
 
-      /* MathJax SVG alignment & scaling */
+      /* MathJax SVG alignment - Original working version */
       mjx-container[jax="SVG"] {
         direction: ltr !important;
-        display: inline-flex !important;
-        vertical-align: middle !important;
+        display: inline-block;
+        vertical-align: middle;
       }
       
       mjx-container[jax="SVG"][display="true"] {
-        margin: 1em 0 !important;
+        margin: 1em 0;
         width: 100%;
         text-align: center;
-        display: flex !important;
+        display: block;
       }
 
-      /* Fix for SVG rendering inside flex containers */
-      .math-container mjx-container {
-        display: inline-flex !important;
-        vertical-align: middle !important;
+      /* Fix for inline math */
+      .inline-math {
+        display: inline;
+      }
+
+      .math-renderer-content {
+        display: inline;
+      }
+
+      /* html2canvas specific fix - ensure SVG is rendered correctly */
+      #exam-paper-printable mjx-container[jax="SVG"] {
+        transform: translateZ(0);
       }
 
       /* Optimization for PDF library capture */
